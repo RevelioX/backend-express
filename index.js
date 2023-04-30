@@ -19,6 +19,8 @@ app.use(express.json());
 const articulosfamiliasRouter = require("./routes/articulosfamilias");
 app.use(articulosfamiliasRouter);
 
+const articulos = require("./routes/articulos");
+app.use(articulos);
 
 // levantar servidor
 const port = 3000;
