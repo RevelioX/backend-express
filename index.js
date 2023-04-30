@@ -2,6 +2,7 @@ const express = require("express");
 
 // crear servidor
 const app = express();
+require("./base-orm/sqlite-init");  // crear base si no existe
 app.use(express.json());
 
 // controlar ruta
@@ -12,6 +13,11 @@ app.get("/", (req, res) => {
 
 const articulosfamiliasmockRouter = require("./routes/articulosfamiliasmock");
 app.use(articulosfamiliasmockRouter);
+
+app.use(express.json());
+
+const articulosfamiliasRouter = require("./routes/articulosfamilias");
+app.use(articulosfamiliasRouter);
 
 
 // levantar servidor
