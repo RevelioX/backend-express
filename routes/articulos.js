@@ -2,24 +2,25 @@ const express = require("express");
 const router = express.Router();
 const db = require("../base-orm/sequelize-init");
 const { Op, ValidationError } = require("sequelize");
+const auth = require("../security/auth");
 
 router.get("/api/articulos", async function (req, res, next) {
   // #swagger.tags = ['Articulos']
   // #swagger.summary = 'obtiene todos los Articulos'
   // consulta de articulos con filtros y paginacion
 
-  let where = {};
+  let where = {}; //Almacena Criterios de busqueda en SQL
   if (req.query.Nombre != undefined && req.query.Nombre !== "") {
     where.Nombre = {
       [Op.like]: "%" + req.query.Nombre + "%",
-    };
+    }; //EJ WHERE Nombre LIKE '%Juan%'
   }
   if (req.query.Activo != undefined && req.query.Activo !== "") {
     // true o false en el modelo, en base de datos es 1 o 0
     // convierto el string a booleano
     where.Activo = req.query.Activo === "true";
   }
-  const Pagina = req.query.Pagina ?? 1;
+  const Pagina = req.query.Pagina ?? 1; // si no esta presente se le agrega un 1
   const TamañoPagina = 10;
   const { count, rows } = await db.articulos.findAndCountAll({
     attributes: [
@@ -191,4 +192,41 @@ router.delete("/api/articulos/:id", async (req, res) => {
     }
   }
 });
+
+//------------------------------------
+//-- SEGURIDAD ---------------------------
+//------------------------------------
+router.get(
+  "/api/jwt/articulos",
+  auth.authenticateJWT,
+  async function (req, res, next) {
+    /* #swagger.security = [{
+               "bearerAuth1": []
+        }] */
+
+    // #swagger.tags = ['Articulos']
+    // #swagger.summary = 'obtiene todos los Articulos, con seguridad JWT, solo para rol: admin (usuario:admin, clave:123)'
+    const { rol } = res.locals.user;
+    if (rol !== "admin") {
+      return res.status(403).json({ message: "usuario no autorizado!" });
+    }
+
+    let items = await db.articulos.findAll({
+      attributes: [
+        "IdArticulo",
+        "Nombre",
+        "Precio",
+        "CodigoDeBarra",
+        "IdArticuloFamilia",
+        "Stock",
+        "FechaAlta",
+        "Activo",
+      ],
+      order: [["Nombre", "ASC"]],
+    });
+    res.json(items);
+  }
+);
+
 module.exports = router;
+
