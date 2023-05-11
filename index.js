@@ -7,9 +7,12 @@ app.use(express.json());
 
 // controlar ruta
 app.get("/", (req, res) => {
-  res.send("Backend inicial dds-backend!");
+  res.send("Hola mundo!");
 });
 
+app.get("/_isalive", (req, res) => {
+  res.send("Ejecutandose desde:");
+});
 
 const articulosfamiliasmockRouter = require("./routes/articulosfamiliasmock");
 app.use(articulosfamiliasmockRouter);
@@ -26,7 +29,11 @@ const seguridad = require("./routes/seguridad");
 app.use(seguridad);
 
 // levantar servidor
-const port = 3000;
-app.listen(port, () => {
+if (!module.parent) {   // si no es llamado por otro modulo, es decir, si es el modulo principal -> levantamos el servidor
+  const port = process.env.PORT || 3000;   // en produccion se usa el puerto de la variable de entorno PORT
+  app.locals.fechaInicio = new Date();
+  app.listen(port, () => {
     console.log(`sitio escuchando en el puerto ${port}`);
-});
+  });
+}
+module.exports = app; // para testing
